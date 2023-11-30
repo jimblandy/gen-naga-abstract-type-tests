@@ -1,6 +1,6 @@
 use std::fmt;
 
-use super::{Scalar, Test, Type, Parameters, Value};
+use super::{Parameters, Scalar, Test, Type, Value};
 
 pub struct Name<T>(pub T);
 
@@ -37,10 +37,7 @@ impl fmt::Display for Name<&'_ Type> {
         match *self.0 {
             Type::Scalar(scalar) => Name(scalar).fmt(f),
             Type::Vector { element, .. } => write!(f, "v{}", Name(element)),
-            Type::Matrix {
-                element,
-                ..
-            } => write!(f, "m{}", Name(element)),
+            Type::Matrix { element, .. } => write!(f, "m{}", Name(element)),
             Type::Array { ref element, .. } => write!(f, "a{}", Name(&**element)),
         }
     }
@@ -70,11 +67,14 @@ impl fmt::Display for Name<Scalar> {
 fn xvupaiai() {
     let t = Test {
         decl_explicit_type: true,
-        r#type: Type::Vector { size: 2, element: Scalar::U32 },
+        r#type: Type::Vector {
+            size: 2,
+            element: Scalar::U32,
+        },
         constructor_explicit_type: false,
         parameters: Parameters::Many(vec![
             Value::Typical(Type::Scalar(Scalar::AbstractInt)),
-            Value::Typical(Type::Scalar(Scalar::AbstractInt))
+            Value::Typical(Type::Scalar(Scalar::AbstractInt)),
         ]),
     };
     assert_eq!(Name(&t).to_string(), "xvupaiai");
@@ -84,11 +84,14 @@ fn xvupaiai() {
 fn xvfpaiai() {
     let t = Test {
         decl_explicit_type: true,
-        r#type: Type::Vector { size: 2, element: Scalar::F32 },
+        r#type: Type::Vector {
+            size: 2,
+            element: Scalar::F32,
+        },
         constructor_explicit_type: false,
         parameters: Parameters::Many(vec![
             Value::Typical(Type::Scalar(Scalar::AbstractInt)),
-            Value::Typical(Type::Scalar(Scalar::AbstractInt))
+            Value::Typical(Type::Scalar(Scalar::AbstractInt)),
         ]),
     };
     assert_eq!(Name(&t).to_string(), "xvfpaiai");
@@ -98,7 +101,10 @@ fn xvfpaiai() {
 fn xvuuai() {
     let t = Test {
         decl_explicit_type: true,
-        r#type: Type::Vector { size: 2, element: Scalar::U32 },
+        r#type: Type::Vector {
+            size: 2,
+            element: Scalar::U32,
+        },
         constructor_explicit_type: true,
         parameters: Parameters::Many(vec![
             Value::Typical(Type::Scalar(Scalar::U32)),
@@ -112,7 +118,10 @@ fn xvuuai() {
 fn xvuaiu() {
     let t = Test {
         decl_explicit_type: true,
-        r#type: Type::Vector { size: 2, element: Scalar::U32 },
+        r#type: Type::Vector {
+            size: 2,
+            element: Scalar::U32,
+        },
         constructor_explicit_type: true,
         parameters: Parameters::Many(vec![
             Value::Typical(Type::Scalar(Scalar::AbstractInt)),
@@ -125,16 +134,21 @@ fn xvuaiu() {
 #[test]
 fn xmfp() {
     fn gen(i: Option<usize>) -> Test {
-        let mut params: Vec<Value> = std::iter::repeat(Value::Typical(Type::Scalar(Scalar::AbstractInt)))
-            .take(4)
-            .collect();
+        let mut params: Vec<Value> =
+            std::iter::repeat(Value::Typical(Type::Scalar(Scalar::AbstractInt)))
+                .take(4)
+                .collect();
         if let Some(i) = i {
             params[i] = Value::Typical(Type::Scalar(Scalar::AbstractFloat));
         }
-        
+
         Test {
             decl_explicit_type: true,
-            r#type: Type::Matrix { columns: 2, rows: 2, element: Scalar::F32 },
+            r#type: Type::Matrix {
+                columns: 2,
+                rows: 2,
+                element: Scalar::F32,
+            },
             constructor_explicit_type: false,
             parameters: Parameters::Many(params),
         }
@@ -151,11 +165,11 @@ fn xmfp() {
 // const xmfpaiafaiai: mat2x2<f32> = mat2x2(1, 2.0, 3, 4);
 // const xmfpaiaiafai: mat2x2<f32> = mat2x2(1, 2, 3.0, 4);
 // const xmfpaiaiaiaf: mat2x2<f32> = mat2x2(1, 2, 3, 4.0);
-// 
+//
 // const imfpaiaiaiai = mat2x2(1, 2, 3, 4);
 // const imfpafaiaiai = mat2x2(1.0, 2, 3, 4);
 // const imfpafafafaf = mat2x2(1.0, 2.0, 3.0, 4.0);
-// 
+//
 // const xmfp_faiaiai: mat2x2<f32> = mat2x2(1.0f, 2, 3, 4);
 // const xmfpai_faiai: mat2x2<f32> = mat2x2(1, 2.0f, 3, 4);
 // const xmfpaiai_fai: mat2x2<f32> = mat2x2(1, 2, 3.0f, 4);

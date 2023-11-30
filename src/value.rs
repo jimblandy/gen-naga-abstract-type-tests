@@ -1,4 +1,7 @@
-use std::{fmt, sync::{Arc, atomic::AtomicI32}};
+use std::{
+    fmt,
+    sync::{atomic::AtomicI32, Arc},
+};
 
 use super::{Parameters, Scalar};
 
@@ -27,7 +30,8 @@ trait Generate<T> {
 }
 
 impl<T, U> Generate<T> for Value<U>
-where State: Generate<T>
+where
+    State: Generate<T>,
 {
     fn generate(&self) -> T {
         self.state.generate()
@@ -62,7 +66,9 @@ pub struct State {
 
 impl Default for State {
     fn default() -> Self {
-        Self { next: AtomicI32::new(42) }
+        Self {
+            next: AtomicI32::new(42),
+        }
     }
 }
 

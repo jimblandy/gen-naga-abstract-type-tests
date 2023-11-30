@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
 mod name;
-mod wgsl;
 mod value;
+mod wgsl;
 
 use indexmap::IndexSet;
 
@@ -33,9 +33,19 @@ enum Parameters {
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 enum Type {
     Scalar(Scalar),
-    Vector { size: usize, element: Scalar },
-    Matrix { columns: usize, rows: usize, element: Scalar },
-    Array { length: usize, element: Box<Type> },
+    Vector {
+        size: usize,
+        element: Scalar,
+    },
+    Matrix {
+        columns: usize,
+        rows: usize,
+        element: Scalar,
+    },
+    Array {
+        length: usize,
+        element: Box<Type>,
+    },
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -80,51 +90,80 @@ fn main() {
 
 fn gen_types() -> impl Iterator<Item = Type> {
     let linear = gen_linear_types();
-    linear.clone()
-        .chain(linear.clone().map(|linear| {
-            Type::Array { length: 2, element: Box::new(linear.clone()) }
+    linear
+        .clone()
+        .chain(linear.clone().map(|linear| Type::Array {
+            length: 2,
+            element: Box::new(linear.clone()),
         }))
 }
 
-
 fn gen_linear_types() -> impl Iterator<Item = Type> + Clone {
     use Type::*;
-    gen_scalars()
-        .flat_map(|scalar| [
+    gen_scalars().flat_map(|scalar| {
+        [
             Scalar(scalar),
-            Vector { size: 2, element: scalar },
-            Matrix { columns: 2, rows: 2, element: scalar },
-        ])
+            Vector {
+                size: 2,
+                element: scalar,
+            },
+            Matrix {
+                columns: 2,
+                rows: 2,
+                element: scalar,
+            },
+        ]
+    })
 }
 
 fn gen_scalars() -> impl Iterator<Item = Scalar> + Clone {
     use Scalar::*;
     [U32, I32, F32, AbstractInt, AbstractFloat].into_iter()
 }
-    
+
 fn gen_params(_ty: &Type) -> impl Iterator<Item = Parameters> {
     [Parameters::Zero].into_iter()
 }
 
 fn cartesian<A, B, AI, BI>(outer: AI, inner: BI) -> impl Iterator<Item = (A, B)>
-where A: Clone,
-      AI: IntoIterator<Item=A>,
-      BI: Clone + IntoIterator<Item=B>,
+where
+    A: Clone,
+    AI: IntoIterator<Item = A>,
+    BI: Clone + IntoIterator<Item = B>,
 {
-    outer.into_iter().flat_map(move |a| inner.clone().into_iter().map(move |b| (a.clone(), b)))
+    outer
+        .into_iter()
+        .flat_map(move |a| inner.clone().into_iter().map(move |b| (a.clone(), b)))
 }
 
 impl Test {
     fn valid(&self) -> bool {
         match *self {
-            Test { r#type: Type::Scalar(_), .. } if !self.constructor_explicit_type => return false,
-            Test { constructor_explicit_type: false, parameters: Parameters::Zero, .. } => return false,
-            Test { r#type: Type::Matrix { element, .. }, .. } if element != Scalar::F32 => return false,
-            Test { decl_explicit_type: true, ref r#type, .. } if r#type.leaf_scalar().is_abstract() => return false,
-            Test { constructor_explicit_type: true, ref r#type, .. } if r#type.leaf_scalar().is_abstract() => return false,
+            Test {
+                r#type: Type::Scalar(_),
+                ..
+            } if !self.constructor_explicit_type => return false,
+            Test {
+                constructor_explicit_type: false,
+                parameters: Parameters::Zero,
+                ..
+            } => return false,
+            Test {
+                r#type: Type::Matrix { element, .. },
+                ..
+            } if element != Scalar::F32 => return false,
+            Test {
+                decl_explicit_type: true,
+                ref r#type,
+                ..
+            } if r#type.leaf_scalar().is_abstract() => return false,
+            Test {
+                constructor_explicit_type: true,
+                ref r#type,
+                ..
+            } if r#type.leaf_scalar().is_abstract() => return false,
             _ => {}
         }
-
 
         true
     }
@@ -134,8 +173,7 @@ impl Type {
     fn leaf_scalar(&self) -> Scalar {
         match *self {
             Type::Scalar(scalar) => scalar,
-            Type::Vector { element, .. } |
-            Type::Matrix { element, .. } => element,
+            Type::Vector { element, .. } | Type::Matrix { element, .. } => element,
             Type::Array { ref element, .. } => element.leaf_scalar(),
         }
     }
@@ -144,11 +182,8 @@ impl Type {
 impl Scalar {
     fn is_abstract(self) -> bool {
         match self {
-            Scalar::U32 |
-            Scalar::I32 |
-            Scalar::F32 => false,
-            Scalar::AbstractInt |
-            Scalar::AbstractFloat => true,
+            Scalar::U32 | Scalar::I32 | Scalar::F32 => false,
+            Scalar::AbstractInt | Scalar::AbstractFloat => true,
         }
     }
 }

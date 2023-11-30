@@ -1,4 +1,4 @@
-use super::{name::Name, Test, Type, Scalar, Parameters};
+use super::{name::Name, Parameters, Scalar, Test, Type};
 
 use std::fmt;
 
@@ -44,14 +44,21 @@ impl fmt::Display for Wgsl<&'_ Type> {
                     write!(f, "vec{}<{}>", size, Wgsl(element))
                 }
             }
-            Type::Matrix { columns, rows, element } => {
+            Type::Matrix {
+                columns,
+                rows,
+                element,
+            } => {
                 if partial {
                     write!(f, "mat{}x{}", columns, rows)
                 } else {
                     write!(f, "mat{}x{}<{}>", columns, rows, Wgsl(element))
                 }
             }
-            Type::Array { length, ref element } => {
+            Type::Array {
+                length,
+                ref element,
+            } => {
                 if partial {
                     write!(f, "array")
                 } else {
@@ -74,4 +81,3 @@ impl fmt::Display for Wgsl<Scalar> {
         f.write_str(s)
     }
 }
-
