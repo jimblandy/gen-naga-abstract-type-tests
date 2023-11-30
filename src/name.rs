@@ -2,15 +2,30 @@ use std::fmt;
 
 use super::{Parameters, Scalar, Test, Type, Value};
 
+#[derive(Debug)]
 pub struct Name<T>(pub T);
 
 impl fmt::Display for Name<&'_ Test> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let test = &self.0;
+        let test = self.0;
+
+        if *test
+            == (Test {
+                decl_explicit_type: false,
+                r#type: Type::Scalar(Scalar::F32),
+                constructor_explicit_type: true,
+                parameters: Parameters::Zero,
+            })
+        {
+            write!(f, "not_keyword_")?;
+        }
+
         f.write_str(if test.decl_explicit_type { "x" } else { "i" })?;
         write!(f, "{}", Name(&test.r#type))?;
         if !test.constructor_explicit_type {
             f.write_str("p")?;
+        } else if test.parameters != Parameters::Zero {
+            f.write_str("_")?;
         }
         write!(f, "{}", Name(&test.parameters))?;
         Ok(())
@@ -21,7 +36,9 @@ impl fmt::Display for Name<&'_ Parameters> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self.0 {
             Parameters::Zero => Ok(()),
-            Parameters::Splat(scalar) => write!(f, "s{}", Name(scalar)),
+            Parameters::Splat(scalar) => {
+                write!(f, "s{}", Name(&Value::Typical(Type::Scalar(scalar))))
+            }
             Parameters::Many(ref values) => {
                 for value in values {
                     Name(value).fmt(f)?;
@@ -46,20 +63,21 @@ impl fmt::Display for Name<&'_ Type> {
 impl fmt::Display for Name<&'_ Value> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.0 {
-            Value::Typical(ref r#type) => Name(r#type).fmt(f),
+            Value::Typical(ref r#type) => write!(f, "{:_>2}", Name(r#type)),
         }
     }
 }
 
 impl fmt::Display for Name<Scalar> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(match self.0 {
+        let string = match self.0 {
             Scalar::U32 => "u",
             Scalar::I32 => "i",
             Scalar::F32 => "f",
             Scalar::AbstractInt => "ai",
             Scalar::AbstractFloat => "af",
-        })
+        };
+        string.fmt(f)
     }
 }
 

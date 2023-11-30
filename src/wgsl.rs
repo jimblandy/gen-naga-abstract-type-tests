@@ -1,4 +1,6 @@
-use super::{name::Name, Parameters, Scalar, Test, Type};
+use super::name::Name;
+use super::value::Value;
+use super::{Parameters, Scalar, Test, Type};
 
 use std::fmt;
 
@@ -18,15 +20,16 @@ impl fmt::Display for Wgsl<&'_ Test> {
             write!(f, "{:#}", Wgsl(&test.r#type))?;
         }
         write!(f, "({})", Wgsl(&test.parameters))?;
-        Ok(())
+        write!(f, ";")
     }
 }
 
 impl fmt::Display for Wgsl<&'_ Parameters> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.0 {
+        let root = Value::new();
+        match *self.0 {
             Parameters::Zero => Ok(()),
-            Parameters::Splat(_) => todo!(),
+            Parameters::Splat(scalar) => root.with(scalar).fmt(f),
             Parameters::Many(_) => todo!(),
         }
     }

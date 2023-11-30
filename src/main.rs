@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+mod gen;
 mod name;
 mod value;
 mod wgsl;
@@ -65,107 +66,31 @@ enum Scalar {
 fn main() {
     let mut seen = IndexSet::new();
     for decl_explicit_type in [true, false] {
-        for r#type in gen_types() {
+        for r#type in gen::gen_types() {
+            let mut printed_any = false;
             for constructor_explicit_type in [true, false] {
-                for parameters in gen_params(&r#type) {
+                for parameters in gen::gen_params(&r#type) {
                     let test = Test {
                         decl_explicit_type,
                         r#type: r#type.clone(),
                         constructor_explicit_type,
                         parameters,
                     };
-                    if test.valid() {
+                    if test.is_valid() {
                         let (index, new) = seen.insert_full(test);
                         if new {
                             let test = &seen[index];
                             println!("{}", wgsl::Wgsl(test));
                             //println!("{:#?}", test);
+                            printed_any = true;
                         }
                     }
                 }
             }
+            if printed_any {
+                println!();
+            }
         }
-    }
-}
-
-fn gen_types() -> impl Iterator<Item = Type> {
-    let linear = gen_linear_types();
-    linear
-        .clone()
-        .chain(linear.clone().map(|linear| Type::Array {
-            length: 2,
-            element: Box::new(linear.clone()),
-        }))
-}
-
-fn gen_linear_types() -> impl Iterator<Item = Type> + Clone {
-    use Type::*;
-    gen_scalars().flat_map(|scalar| {
-        [
-            Scalar(scalar),
-            Vector {
-                size: 2,
-                element: scalar,
-            },
-            Matrix {
-                columns: 2,
-                rows: 2,
-                element: scalar,
-            },
-        ]
-    })
-}
-
-fn gen_scalars() -> impl Iterator<Item = Scalar> + Clone {
-    use Scalar::*;
-    [U32, I32, F32, AbstractInt, AbstractFloat].into_iter()
-}
-
-fn gen_params(_ty: &Type) -> impl Iterator<Item = Parameters> {
-    [Parameters::Zero].into_iter()
-}
-
-fn cartesian<A, B, AI, BI>(outer: AI, inner: BI) -> impl Iterator<Item = (A, B)>
-where
-    A: Clone,
-    AI: IntoIterator<Item = A>,
-    BI: Clone + IntoIterator<Item = B>,
-{
-    outer
-        .into_iter()
-        .flat_map(move |a| inner.clone().into_iter().map(move |b| (a.clone(), b)))
-}
-
-impl Test {
-    fn valid(&self) -> bool {
-        match *self {
-            Test {
-                r#type: Type::Scalar(_),
-                ..
-            } if !self.constructor_explicit_type => return false,
-            Test {
-                constructor_explicit_type: false,
-                parameters: Parameters::Zero,
-                ..
-            } => return false,
-            Test {
-                r#type: Type::Matrix { element, .. },
-                ..
-            } if element != Scalar::F32 => return false,
-            Test {
-                decl_explicit_type: true,
-                ref r#type,
-                ..
-            } if r#type.leaf_scalar().is_abstract() => return false,
-            Test {
-                constructor_explicit_type: true,
-                ref r#type,
-                ..
-            } if r#type.leaf_scalar().is_abstract() => return false,
-            _ => {}
-        }
-
-        true
     }
 }
 
@@ -177,6 +102,14 @@ impl Type {
             Type::Array { ref element, .. } => element.leaf_scalar(),
         }
     }
+
+    fn is_valid(&self) -> bool {
+        match *self {
+            Type::Scalar(_) | Type::Vector { .. } => true,
+            Type::Matrix { element, .. } => element.is_float(),
+            Type::Array { ref element, .. } => element.is_valid(),
+        }
+    }
 }
 
 impl Scalar {
@@ -185,5 +118,61 @@ impl Scalar {
             Scalar::U32 | Scalar::I32 | Scalar::F32 => false,
             Scalar::AbstractInt | Scalar::AbstractFloat => true,
         }
+    }
+
+    fn is_float(self) -> bool {
+        match self {
+            Scalar::U32 | Scalar::I32 | Scalar::AbstractInt => false,
+            Scalar::AbstractFloat | Scalar::F32 => true,
+        }
+    }
+}
+
+impl Test {
+    fn is_valid(&self) -> bool {
+        match *self {
+            // Some types aren't valid WGSL at all, like `mat2x2<u32>`.
+            Test { ref r#type, .. } if !r#type.is_valid() => return false,
+
+            // Scalar types don't have template arguments anyway, so trim
+            // out the partial constructors.
+            Test {
+                r#type: Type::Scalar(_),
+                ..
+            } if !self.constructor_explicit_type => return false,
+
+            // Splats are only allowed for vectors.
+            Test {
+                ref r#type,
+                parameters: Parameters::Splat(_),
+                ..
+            } if !matches!(r#type, Type::Vector { .. }) => return false,
+
+            // If the scalar type is abstract, we can't write it out.
+            Test {
+                decl_explicit_type: decl,
+                constructor_explicit_type: con,
+                ref r#type,
+                ..
+            } if r#type.leaf_scalar().is_abstract() && (decl || con) => return false,
+
+            // Things Naga should support eventually:
+
+            // WGSL does support zero-value constructors without
+            // template lists, but Naga doesn't support them yet.
+            Test {
+                constructor_explicit_type: false,
+                parameters: Parameters::Zero,
+                ..
+            } => return false,
+
+            // WGSL does support constants with abstract types, but
+            // Naga doesn't implement them yet. For now, skip them.
+            Test { ref r#type, .. } if r#type.leaf_scalar().is_abstract() => return false,
+
+            _ => {}
+        }
+
+        true
     }
 }

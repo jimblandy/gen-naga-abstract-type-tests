@@ -10,14 +10,17 @@ pub struct Value<T> {
     state: Arc<State>,
 }
 
-impl<T> Value<T> {
-    fn new(data: T) -> Value<T> {
+impl Value<()> {
+    pub fn new() -> Value<()> {
         Value {
-            data,
+            data: (),
             state: Arc::new(State::default()),
         }
     }
-    fn with<U>(&self, data: U) -> Value<U> {
+}
+
+impl<T> Value<T> {
+    pub fn with<U>(&self, data: U) -> Value<U> {
         Value {
             data,
             state: self.state.clone(),
@@ -25,7 +28,7 @@ impl<T> Value<T> {
     }
 }
 
-trait Generate<T> {
+pub trait Generate<T> {
     fn generate(&self) -> T;
 }
 
@@ -55,7 +58,7 @@ impl fmt::Display for Value<Scalar> {
             Scalar::I32 => write!(f, "{}i", Generate::<i32>::generate(self)),
             Scalar::F32 => write!(f, "{}f", Generate::<f32>::generate(self)),
             Scalar::AbstractInt => write!(f, "{}", Generate::<i32>::generate(self)),
-            Scalar::AbstractFloat => write!(f, "{}", Generate::<f32>::generate(self)),
+            Scalar::AbstractFloat => write!(f, "{:?}", Generate::<f32>::generate(self)),
         }
     }
 }
