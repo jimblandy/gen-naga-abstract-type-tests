@@ -99,6 +99,8 @@ fn main() {
         }
     }
 
+    print!("{}", include_str!("preamble.wgsl"));
+
     let mut prior_type = None;
     for test in seen.values() {
         println!("{}", wgsl::Wgsl(test));
