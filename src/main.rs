@@ -4,6 +4,7 @@ use std::collections::btree_map;
 
 mod gen;
 mod name;
+mod separated;
 mod generated;
 mod wgsl;
 
