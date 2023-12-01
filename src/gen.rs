@@ -35,7 +35,7 @@ pub fn gen_params(ty: &Type) -> impl Iterator<Item = Parameters> {
     let mut p = vec![Parameters::Zero];
 
     // Include splats from all suitable scalars.
-    p.extend(convertible_scalars.clone().map(Parameters::Splat));
+    p.extend(convertible_scalars.clone().map(Parameters::One));
 
     p.into_iter()
 }

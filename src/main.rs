@@ -27,7 +27,7 @@ struct Test {
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 enum Parameters {
     Zero,
-    Splat(Scalar),
+    One(Scalar),
     Many(Vec<Value>),
 }
 
@@ -160,7 +160,7 @@ impl Test {
             // Splats are only allowed for vectors.
             Test {
                 ref r#type,
-                parameters: Parameters::Splat(_),
+                parameters: Parameters::One(_),
                 ..
             } if !matches!(r#type, Type::Vector { .. }) => return false,
 

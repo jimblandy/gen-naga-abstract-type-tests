@@ -45,7 +45,7 @@ impl fmt::Display for Value<&'_ Parameters> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self.data {
             Parameters::Zero => Ok(()),
-            Parameters::Splat(scalar) => self.with(scalar).fmt(f),
+            Parameters::One(scalar) => self.with(scalar).fmt(f),
             Parameters::Many(_) => todo!(),
         }
     }

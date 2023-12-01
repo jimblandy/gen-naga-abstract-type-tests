@@ -30,7 +30,7 @@ impl fmt::Display for Wgsl<&'_ Parameters> {
         let root = Value::new();
         match *self.0 {
             Parameters::Zero => Ok(()),
-            Parameters::Splat(scalar) => root.with(scalar).fmt(f),
+            Parameters::One(scalar) => root.with(scalar).fmt(f),
             Parameters::Many(_) => todo!(),
         }
     }
