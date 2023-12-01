@@ -1,6 +1,7 @@
 // i/x: type inferred / explicit
-// vX/mX/aX: vector / matrix / array of X
+// X/vX/mX: vector / matrix of X
 //     where X: u/i/f: u32 / i32 / f32
+// aX: array of any of the above
 // s: vector splat
 // r: vector spread (vector arg to vector constructor)
 // p: "partial" constructor (type parameter inferred)
