@@ -35,6 +35,8 @@ impl fmt::Display for Wgsl<&'_ Parameters> {
     }
 }
 
+// Alternative format is just a bare type generator name, without
+// template parameters.
 impl fmt::Display for Wgsl<&'_ Type> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let partial = f.alternate();

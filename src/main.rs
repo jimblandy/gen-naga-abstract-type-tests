@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 
+use std::collections::btree_map;
+
 mod gen;
 mod name;
 mod value;
 mod wgsl;
-
-use indexmap::IndexSet;
 
 #[derive(Debug, Eq, Hash, PartialEq)]
 struct Test {
@@ -64,10 +64,9 @@ enum Scalar {
 }
 
 fn main() {
-    let mut seen = IndexSet::new();
+    let mut seen = std::collections::BTreeMap::new();
     for decl_explicit_type in [true, false] {
         for r#type in gen::gen_types() {
-            let mut printed_any = false;
             for constructor_explicit_type in [true, false] {
                 for parameters in gen::gen_params(&r#type) {
                     let test = Test {
@@ -76,21 +75,38 @@ fn main() {
                         constructor_explicit_type,
                         parameters,
                     };
-                    if test.is_valid() {
-                        let (index, new) = seen.insert_full(test);
-                        if new {
-                            let test = &seen[index];
-                            println!("{}", wgsl::Wgsl(test));
-                            //println!("{:#?}", test);
-                            printed_any = true;
+                    if !test.is_valid() {
+                        continue;
+                    }
+
+                    let name = name::Name(&test).to_string();
+                    match seen.entry(name) {
+                        btree_map::Entry::Vacant(v) => {
+                            v.insert(test);
+                        }
+                        btree_map::Entry::Occupied(o) => {
+                            if o.get() != &test {
+                                eprintln!("warning: different tests have the same name {:?}:", o.key());
+                                eprintln!();
+                                eprintln!("{:#?}", o.get());
+                                eprintln!();
+                                eprintln!("{:#?}", test);
+                            }
                         }
                     }
                 }
             }
-            if printed_any {
-                println!();
-            }
         }
+    }
+
+    let mut prior_type = None;
+    for test in seen.values() {
+        println!("{}", wgsl::Wgsl(test));
+        if Some(&test.r#type) != prior_type {
+            println!();
+            prior_type = Some(&test.r#type);
+        }
+        //println!("{:#?}", test);
     }
 }
 
