@@ -18,7 +18,7 @@ struct Test {
 
     /// Does the constructor have a template list, or infer the
     /// element type from its arguments?
-    constructor_explicit_type: bool,
+    full_constructor: bool,
 
     /// Parameters to the constructor.
     parameters: Parameters,
@@ -67,12 +67,12 @@ fn main() {
     let mut seen = std::collections::BTreeMap::new();
     for decl_explicit_type in [true, false] {
         for r#type in gen::gen_types() {
-            for constructor_explicit_type in [true, false] {
+            for full_constructor in [true, false] {
                 for parameters in gen::gen_params(&r#type) {
                     let test = Test {
                         decl_explicit_type,
                         r#type: r#type.clone(),
-                        constructor_explicit_type,
+                        full_constructor,
                         parameters,
                     };
                     if !test.is_valid() {
@@ -155,7 +155,7 @@ impl Test {
             Test {
                 r#type: Type::Scalar(_),
                 ..
-            } if !self.constructor_explicit_type => return false,
+            } if !self.full_constructor => return false,
 
             // Splats are only allowed for vectors.
             Test {
@@ -167,7 +167,7 @@ impl Test {
             // If the scalar type is abstract, we can't write it out.
             Test {
                 decl_explicit_type: decl,
-                constructor_explicit_type: con,
+                full_constructor: con,
                 ref r#type,
                 ..
             } if r#type.leaf_scalar().is_abstract() && (decl || con) => return false,
@@ -177,7 +177,7 @@ impl Test {
             // WGSL does support zero-value constructors without
             // template lists, but Naga doesn't support them yet.
             Test {
-                constructor_explicit_type: false,
+                full_constructor: false,
                 parameters: Parameters::Zero,
                 ..
             } => return false,

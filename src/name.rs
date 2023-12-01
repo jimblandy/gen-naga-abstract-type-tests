@@ -13,7 +13,7 @@ impl fmt::Display for Name<&'_ Test> {
             == (Test {
                 decl_explicit_type: false,
                 r#type: Type::Scalar(Scalar::F32),
-                constructor_explicit_type: true,
+                full_constructor: true,
                 parameters: Parameters::Zero,
             })
         {
@@ -22,7 +22,7 @@ impl fmt::Display for Name<&'_ Test> {
 
         f.write_str(if test.decl_explicit_type { "x" } else { "i" })?;
         write!(f, "{}", Name(&test.r#type))?;
-        if !test.constructor_explicit_type {
+        if !test.full_constructor {
             f.write_str("p")?;
         } else if test.parameters != Parameters::Zero {
             f.write_str("_")?;
@@ -89,7 +89,7 @@ fn xvupaiai() {
             size: 2,
             element: Scalar::U32,
         },
-        constructor_explicit_type: false,
+        full_constructor: false,
         parameters: Parameters::Many(vec![
             Value::Typical(Type::Scalar(Scalar::AbstractInt)),
             Value::Typical(Type::Scalar(Scalar::AbstractInt)),
@@ -106,7 +106,7 @@ fn xvfpaiai() {
             size: 2,
             element: Scalar::F32,
         },
-        constructor_explicit_type: false,
+        full_constructor: false,
         parameters: Parameters::Many(vec![
             Value::Typical(Type::Scalar(Scalar::AbstractInt)),
             Value::Typical(Type::Scalar(Scalar::AbstractInt)),
@@ -123,7 +123,7 @@ fn xvuuai() {
             size: 2,
             element: Scalar::U32,
         },
-        constructor_explicit_type: true,
+        full_constructor: true,
         parameters: Parameters::Many(vec![
             Value::Typical(Type::Scalar(Scalar::U32)),
             Value::Typical(Type::Scalar(Scalar::AbstractInt)),
@@ -140,7 +140,7 @@ fn xvuaiu() {
             size: 2,
             element: Scalar::U32,
         },
-        constructor_explicit_type: true,
+        full_constructor: true,
         parameters: Parameters::Many(vec![
             Value::Typical(Type::Scalar(Scalar::AbstractInt)),
             Value::Typical(Type::Scalar(Scalar::U32)),
@@ -167,7 +167,7 @@ fn xmfp() {
                 rows: 2,
                 element: Scalar::F32,
             },
-            constructor_explicit_type: false,
+            full_constructor: false,
             parameters: Parameters::Many(params),
         }
     }

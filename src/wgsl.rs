@@ -14,7 +14,8 @@ impl fmt::Display for Wgsl<&'_ Test> {
             write!(f, ": {}", Wgsl(&test.r#type))?;
         }
         write!(f, " = ")?;
-        if test.constructor_explicit_type {
+
+        if test.full_constructor {
             write!(f, "{}", Wgsl(&test.r#type))?;
         } else {
             write!(f, "{:#}", Wgsl(&test.r#type))?;
