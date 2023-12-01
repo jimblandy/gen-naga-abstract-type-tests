@@ -4,7 +4,7 @@ use std::collections::btree_map;
 
 mod gen;
 mod name;
-mod value;
+mod generated;
 mod wgsl;
 
 #[derive(Debug, Eq, Hash, PartialEq)]

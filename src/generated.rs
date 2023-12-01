@@ -5,23 +5,23 @@ use std::{
 
 use super::{Parameters, Scalar};
 
-pub struct Value<T> {
+pub struct Generated<T> {
     data: T,
     state: Arc<State>,
 }
 
-impl Value<()> {
-    pub fn new() -> Value<()> {
-        Value {
+impl Generated<()> {
+    pub fn new() -> Generated<()> {
+        Generated {
             data: (),
             state: Arc::new(State::default()),
         }
     }
 }
 
-impl<T> Value<T> {
-    pub fn with<U>(&self, data: U) -> Value<U> {
-        Value {
+impl<T> Generated<T> {
+    pub fn with<U>(&self, data: U) -> Generated<U> {
+        Generated {
             data,
             state: self.state.clone(),
         }
@@ -32,7 +32,7 @@ pub trait Generate<T> {
     fn generate(&self) -> T;
 }
 
-impl<T, U> Generate<T> for Value<U>
+impl<T, U> Generate<T> for Generated<U>
 where
     State: Generate<T>,
 {
@@ -41,7 +41,7 @@ where
     }
 }
 
-impl fmt::Display for Value<&'_ Parameters> {
+impl fmt::Display for Generated<&'_ Parameters> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self.data {
             Parameters::Zero => Ok(()),
@@ -51,7 +51,7 @@ impl fmt::Display for Value<&'_ Parameters> {
     }
 }
 
-impl fmt::Display for Value<Scalar> {
+impl fmt::Display for Generated<Scalar> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.data {
             Scalar::U32 => write!(f, "{}u", Generate::<u32>::generate(self)),

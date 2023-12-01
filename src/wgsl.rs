@@ -1,5 +1,5 @@
 use super::name::Name;
-use super::value::Value;
+use super::generated::Generated;
 use super::{Parameters, Scalar, Test, Type};
 
 use std::fmt;
@@ -19,7 +19,7 @@ impl fmt::Display for Wgsl<&'_ Test> {
             // For scalars, treat the non-"full constructor" case as
             // "no constructor at all", just the literal.
             Test { full_constructor: false, r#type: Type::Scalar(_), parameters: Parameters::One(ref value), .. } => {
-                let root = Value::new();
+                let root = Generated::new();
                 root.with(*value).fmt(f)?;
             }
             Test { full_constructor: true, ref r#type, ref parameters, .. } => {
@@ -37,7 +37,7 @@ impl fmt::Display for Wgsl<&'_ Test> {
 
 impl fmt::Display for Wgsl<&'_ Parameters> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let root = Value::new();
+        let root = Generated::new();
         match *self.0 {
             Parameters::Zero => Ok(()),
             Parameters::One(scalar) => root.with(scalar).fmt(f),
