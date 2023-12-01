@@ -150,19 +150,12 @@ impl Test {
             // Some types aren't valid WGSL at all, like `mat2x2<u32>`.
             Test { ref r#type, .. } if !r#type.is_valid() => return false,
 
-            // Scalar types don't have template arguments anyway, so trim
-            // out the partial constructors.
-            Test {
-                r#type: Type::Scalar(_),
-                ..
-            } if !self.full_constructor => return false,
-
-            // Splats are only allowed for vectors.
+            // Vectors have splats, and scalars are naturally a single value.
             Test {
                 ref r#type,
                 parameters: Parameters::One(_),
                 ..
-            } if !matches!(r#type, Type::Vector { .. }) => return false,
+            } if !matches!(r#type, Type::Scalar(_) | Type::Vector { .. }) => return false,
 
             // If the scalar type is abstract, we can't write it out.
             Test {

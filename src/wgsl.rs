@@ -15,12 +15,22 @@ impl fmt::Display for Wgsl<&'_ Test> {
         }
         write!(f, " = ")?;
 
-        if test.full_constructor {
-            write!(f, "{}", Wgsl(&test.r#type))?;
-        } else {
-            write!(f, "{:#}", Wgsl(&test.r#type))?;
+        match test {
+            // For scalars, treat the non-"full constructor" case as
+            // "no constructor at all", just the literal.
+            Test { full_constructor: false, r#type: Type::Scalar(_), parameters: Parameters::One(ref value), .. } => {
+                let root = Value::new();
+                root.with(*value).fmt(f)?;
+            }
+            Test { full_constructor: true, ref r#type, ref parameters, .. } => {
+                write!(f, "{}", Wgsl(r#type))?;
+                write!(f, "({})", Wgsl(parameters))?;
+            }
+            Test { ref r#type, ref parameters, .. } => {
+                write!(f, "{:#}", Wgsl(r#type))?;
+                write!(f, "({})", Wgsl(parameters))?;
+            }
         }
-        write!(f, "({})", Wgsl(&test.parameters))?;
         write!(f, ";")
     }
 }

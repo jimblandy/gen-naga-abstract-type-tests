@@ -12,12 +12,27 @@ const iavi = array<vec2<i32>, 2>();
 
 const iavu = array<vec2<u32>, 2>();
 
+const if_s_f = f32(42f);
+
+const if_saf = f32(42.0);
+const if_sai = f32(42);
+const ifps_f = 42f;
+const ifpsaf = 42.0;
+const ifpsai = 42;
 const ii = i32();
 
+const ii_s_i = i32(42i);
+const ii_sai = i32(42);
+const iips_i = 42i;
+const iipsai = 42;
 const imf = mat2x2<f32>();
 
 const iu = u32();
 
+const iu_s_u = u32(42u);
+const iu_sai = u32(42);
+const iups_u = 42u;
+const iupsai = 42;
 const ivf = vec2<f32>();
 
 const ivf_s_f = vec2<f32>(42f);
@@ -56,12 +71,26 @@ const xavu: array<vec2<u32>, 2> = array<vec2<u32>, 2>();
 
 const xf: f32 = f32();
 
+const xf_s_f: f32 = f32(42f);
+const xf_saf: f32 = f32(42.0);
+const xf_sai: f32 = f32(42);
+const xfps_f: f32 = 42f;
+const xfpsaf: f32 = 42.0;
+const xfpsai: f32 = 42;
 const xi: i32 = i32();
 
+const xi_s_i: i32 = i32(42i);
+const xi_sai: i32 = i32(42);
+const xips_i: i32 = 42i;
+const xipsai: i32 = 42;
 const xmf: mat2x2<f32> = mat2x2<f32>();
 
 const xu: u32 = u32();
 
+const xu_s_u: u32 = u32(42u);
+const xu_sai: u32 = u32(42);
+const xups_u: u32 = 42u;
+const xupsai: u32 = 42;
 const xvf: vec2<f32> = vec2<f32>();
 
 const xvf_s_f: vec2<f32> = vec2<f32>(42f);
