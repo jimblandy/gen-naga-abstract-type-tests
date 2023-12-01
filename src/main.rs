@@ -129,6 +129,15 @@ impl Type {
             Type::Array { ref element, .. } => element.is_valid(),
         }
     }
+
+    fn elements(&self) -> usize {
+        match *self {
+            Type::Scalar(_) => 1,
+            Type::Vector { size, .. } => size,
+            Type::Matrix { columns, rows, .. } => columns * rows,
+            Type::Array { length, ref element } => length * element.elements(),
+        }
+    }
 }
 
 impl Scalar {
