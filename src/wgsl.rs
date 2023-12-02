@@ -38,11 +38,7 @@ impl fmt::Display for Wgsl<&'_ Test> {
 impl fmt::Display for Wgsl<&'_ Parameters> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let root = Generated::new();
-        match *self.0 {
-            Parameters::Zero => Ok(()),
-            Parameters::One(scalar) => root.with(scalar).fmt(f),
-            Parameters::Many(_) => todo!(),
-        }
+        root.with(self.0).fmt(f)
     }
 }
 

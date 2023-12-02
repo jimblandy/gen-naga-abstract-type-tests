@@ -1,6 +1,6 @@
 use std::fmt;
 
-use super::{Parameters, Scalar, Test, Type, Value};
+use super::{Parameters, Scalar, Test, Type};
 
 #[derive(Debug)]
 pub struct Name<T>(pub T);
@@ -37,11 +37,11 @@ impl fmt::Display for Name<&'_ Parameters> {
         match *self.0 {
             Parameters::Zero => Ok(()),
             Parameters::One(scalar) => {
-                write!(f, "s{}", Name(&Value::Typical(Type::Scalar(scalar))))
+                write!(f, "s{}", Name(&Type::Scalar(scalar)))
             }
-            Parameters::Many(ref values) => {
-                for value in values {
-                    Name(value).fmt(f)?;
+            Parameters::Many(ref types) => {
+                for ty in types {
+                    write!(f, "{:_>2}", Name(ty))?;
                 }
                 Ok(())
             }
@@ -56,14 +56,6 @@ impl fmt::Display for Name<&'_ Type> {
             Type::Vector { element, .. } => write!(f, "v{}", Name(element)),
             Type::Matrix { element, .. } => write!(f, "m{}", Name(element)),
             Type::Array { ref element, .. } => write!(f, "a{}", Name(&**element)),
-        }
-    }
-}
-
-impl fmt::Display for Name<&'_ Value> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.0 {
-            Value::Typical(ref r#type) => write!(f, "{:_>2}", Name(r#type)),
         }
     }
 }

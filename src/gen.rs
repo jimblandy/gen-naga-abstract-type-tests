@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use super::{Parameters, Scalar, Type};
 
 pub fn gen_types() -> impl Iterator<Item = Type> {
@@ -6,7 +8,7 @@ pub fn gen_types() -> impl Iterator<Item = Type> {
         .clone()
         .chain(linear.clone().map(|linear| Type::Array {
             length: 2,
-            element: Box::new(linear.clone()),
+            element: Arc::new(linear.clone()),
         }))
 }
 
@@ -29,6 +31,8 @@ pub fn gen_linear_types() -> impl Iterator<Item = Type> + Clone {
 }
 
 pub fn gen_params(ty: &Type) -> impl Iterator<Item = Parameters> {
+    use std::iter;
+
     let leaf_scalar = ty.leaf_scalar();
     let convertible_scalars = gen_convertible_scalars(leaf_scalar);
 
@@ -36,6 +40,17 @@ pub fn gen_params(ty: &Type) -> impl Iterator<Item = Parameters> {
 
     // Include splats from all suitable scalars.
     p.extend(convertible_scalars.clone().map(Parameters::One));
+
+    // Include from-elements parameters for all suitable scalars.
+    let elements = ty.elements();
+    if let Some(element_ty) = ty.element_type() {
+        for scalar in convertible_scalars.clone() {
+            let parameters = iter::repeat(element_ty.replace_scalar(scalar))
+                .take(elements)
+                .collect();
+            p.push(Parameters::Many(parameters))
+        }
+    }
 
     p.into_iter()
 }

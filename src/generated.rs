@@ -3,7 +3,8 @@ use std::{
     sync::{atomic::AtomicI32, Arc},
 };
 
-use super::{Parameters, Scalar};
+use super::{Parameters, Scalar, Type};
+use crate::separated::Separable as _;
 
 pub struct Generated<T> {
     data: T,
@@ -46,7 +47,30 @@ impl fmt::Display for Generated<&'_ Parameters> {
         match *self.data {
             Parameters::Zero => Ok(()),
             Parameters::One(scalar) => self.with(scalar).fmt(f),
-            Parameters::Many(_) => todo!(),
+            Parameters::Many(ref parameters) => {
+                for (sep, ty) in parameters.iter().with_separator(", ") {
+                    write!(f, "{}{}", sep, self.with(ty))?;
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
+impl fmt::Display for Generated<&'_ Type> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self.data {
+            Type::Scalar(scalar) => self.with(scalar).fmt(f),
+            ref ty => {
+                let size = ty.elements();
+                let element_ty = ty.element_type().unwrap();
+                let leaf_gen = self.with(element_ty.as_ref());
+                write!(f, "{:#}(", super::wgsl::Wgsl(ty))?;
+                for (sep, _) in (0..size).with_separator(", ") {
+                    write!(f, "{}{}", sep, leaf_gen)?;
+                }
+                write!(f, ")")
+            }
         }
     }
 }

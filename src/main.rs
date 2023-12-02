@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 
+use std::borrow::Cow;
 use std::collections::btree_map;
+use std::sync::Arc;
 
 mod gen;
 mod name;
@@ -29,7 +31,7 @@ struct Test {
 enum Parameters {
     Zero,
     One(Scalar),
-    Many(Vec<Value>),
+    Many(Vec<Type>),
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -46,13 +48,8 @@ enum Type {
     },
     Array {
         length: usize,
-        element: Box<Type>,
+        element: Arc<Type>,
     },
-}
-
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-enum Value {
-    Typical(Type),
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -104,11 +101,11 @@ fn main() {
 
     let mut prior_type = None;
     for test in seen.values() {
-        println!("{}", wgsl::Wgsl(test));
         if Some(&test.r#type) != prior_type {
             println!();
             prior_type = Some(&test.r#type);
         }
+        println!("{}", wgsl::Wgsl(test));
         //println!("{:#?}", test);
     }
 }
@@ -135,7 +132,24 @@ impl Type {
             Type::Scalar(_) => 1,
             Type::Vector { size, .. } => size,
             Type::Matrix { columns, rows, .. } => columns * rows,
-            Type::Array { length, ref element } => length * element.elements(),
+            Type::Array { length, .. } => length,
+        }
+    }
+
+    fn element_type(&self) -> Option<Cow<Type>> {
+        match *self {
+            Type::Scalar(_) => None,
+            Type::Vector { element, .. } | Type::Matrix { element, .. } => Some(Cow::Owned(Type::Scalar(element))),
+            Type::Array { ref element, .. } => Some(Cow::Borrowed(&**element)),
+        }
+    }
+
+    fn replace_scalar(&self, scalar: Scalar) -> Type {
+        match *self {
+            Type::Scalar(_) => Type::Scalar(scalar),
+            Type::Vector { size, element: _ } => Type::Vector { size, element: scalar },
+            Type::Matrix { columns, rows, element: _ } => Type::Matrix { columns, rows, element: scalar },
+            Type::Array { length, ref element } => Type::Array { length, element: Arc::new(element.replace_scalar(scalar)) },
         }
     }
 }
