@@ -39,16 +39,31 @@ pub fn gen_params(ty: &Type) -> impl Iterator<Item = Parameters> {
     let mut p = vec![Parameters::Zero];
 
     // Include splats from all suitable scalars.
-    p.extend(convertible_scalars.clone().map(Parameters::One));
+    p.extend(convertible_scalars.iter().cloned().map(Parameters::One));
 
-    // Include from-elements parameters for all suitable scalars.
     let elements = ty.elements();
     if let Some(element_ty) = ty.element_type() {
-        for scalar in convertible_scalars.clone() {
+        // Include from-elements parameters for all suitable scalars.
+        for &scalar in convertible_scalars.iter() {
             let parameters = iter::repeat(element_ty.replace_scalar(scalar))
                 .take(elements)
                 .collect();
             p.push(Parameters::Many(parameters))
+        }
+
+        // Include from-elements parameters for all suitable scalars,
+        // with one parameter forcing a more specific type.
+        for (i, &first) in (0..).zip(convertible_scalars) {
+            for &second in convertible_scalars[i + 1..].iter() {
+                for standout in 0..elements {
+                    let mut parameters: Vec<_> = iter::repeat(element_ty.replace_scalar(first))
+                        .take(elements)
+                        .collect();
+
+                    parameters[standout] = element_ty.replace_scalar(second);
+                    p.push(Parameters::Many(parameters))
+                }
+            }
         }
     }
 
@@ -60,13 +75,13 @@ pub fn gen_scalars() -> impl Iterator<Item = Scalar> + Clone {
     [U32, I32, F32, AbstractInt, AbstractFloat].into_iter()
 }
 
-pub fn gen_convertible_scalars(target: Scalar) -> impl Iterator<Item = Scalar> + Clone {
+fn gen_convertible_scalars(target: Scalar) -> &'static [Scalar] {
     match target {
-        Scalar::U32 => [Scalar::AbstractInt, Scalar::U32].iter().cloned(),
-        Scalar::I32 => [Scalar::AbstractInt, Scalar::I32].iter().cloned(),
-        Scalar::F32 => [Scalar::AbstractInt, Scalar::AbstractFloat, Scalar::F32].iter().cloned(),
-        Scalar::AbstractInt => [Scalar::AbstractInt].iter().cloned(),
-        Scalar::AbstractFloat => [Scalar::AbstractInt, Scalar::AbstractFloat].iter().cloned(),
+        Scalar::U32 => &[Scalar::AbstractInt, Scalar::U32],
+        Scalar::I32 => &[Scalar::AbstractInt, Scalar::I32],
+        Scalar::F32 => &[Scalar::AbstractInt, Scalar::AbstractFloat, Scalar::F32],
+        Scalar::AbstractInt => &[Scalar::AbstractInt],
+        Scalar::AbstractFloat => &[Scalar::AbstractInt, Scalar::AbstractFloat],
     }
 }
 
